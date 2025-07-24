@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kalendarz sesji Paulina</title>
+<style>
+  body { font-family: sans-serif; background: #f7f5f9; padding: 20px; }
+  h1 { text-align: center; color: #6a5acd; }
+  .calendar { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; max-width: 1000px; margin: auto; }
+  .month { background: white; border-radius: 10px; padding: 10px; }
+  .month h2 { text-align: center; color: #7b68ee; margin: 5px; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .day { aspect-ratio: 1/1; background: #e8e4f4; border-radius: 5px; text-align: center; line-height: 2; cursor: pointer; font-size: 0.9em; }
+  .day.busy { background: #7ebc6f; color: white; font-weight: bold; }
+  .day.free { background: #dcd6f7; color: #333; }
+  #lists { max-width: 600px; margin: 20px auto; text-align: center; }
+  button { padding: 8px 12px; border: none; background: #7b68ee; color: white; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Kalendarz sesji zdjęciowych Paulina</h1>
+<div class="calendar" id="calendar"></div>
+
+<div id="lists">
+  <h3>Zajęte terminy:</h3>
+  <ul id="busyList"></ul>
+  <h3>Dostępne terminy:</h3>
+  <ul id="freeList"></ul>
+  <button id="clearBtn">Wyczyść terminy</button>
+</div>
+
+<script>
+const calendarEl = document.getElementById('calendar');
+const busyList = document.getElementById('busyList');
+const freeList = document.getElementById('freeList');
+const clearBtn = document.getElementById('clearBtn');
+const year = new Date().getFullYear();
+let appointments = {};
+
+function renderCalendar() {
+  calendarEl.innerHTML = '';
+  const monthNames = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+
+  for (let month = 0; month < 12; month++) {
+    const monthDiv = document.createElement('div');
+    monthDiv.className = 'month';
+    const title = document.createElement('h2');
+    title.textContent = `${monthNames[month]} ${year}`;
+    monthDiv.appendChild(title);
+
+    const daysGrid = document.createElement('div');
+    daysGrid.className = 'days';
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+    for (let i = 0; i < startOffset; i++) {
+      const empty = document.createElement('div');
+      daysGrid.appendChild(empty);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'day';
+      dayDiv.textContent = day;
+      const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+
+      if (appointments[dateKey] === 'busy') dayDiv.classList.add('busy');
+      if (appointments[dateKey] === 'free') dayDiv.classList.add('free');
+
+      dayDiv.addEventListener('click', () => {
+        if (appointments[dateKey] === 'busy') {
+          delete appointments[dateKey];
+        } else if (appointments[dateKey] === 'free') {
+          appointments[dateKey] = 'busy';
+        } else {
+          appointments[dateKey] = 'free';
+        }
+        updateLists();
+        renderCalendar();
+      });
+
+      daysGrid.appendChild(dayDiv);
+    }
+
+    monthDiv.appendChild(daysGrid);
+    calendarEl.appendChild(monthDiv);
+  }
+}
+
+function updateLists() {
+  busyList.innerHTML = '';
+  freeList.innerHTML = '';
+  Object.keys(appointments).sort().forEach(date => {
+    const li = document.createElement('li');
+    li.textContent = date;
+    if (appointments[date] === 'busy') busyList.appendChild(li);
+    if (appointments[date] === 'free') freeList.appendChild(li);
+  });
+}
+
+clearBtn.addEventListener('click', () => {
+  appointments = {};
+  updateLists();
+  renderCalendar();
+});
+
+renderCalendar();
+</script>
+</body>
+</html>
